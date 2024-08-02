@@ -2,6 +2,9 @@
 #include <sycl/sycl.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/iostream.h>
+
+namespace py = pybind11;
+
 using u32 =unsigned int;
 void test_bug(){
 
@@ -37,6 +40,12 @@ void test_bug(){
 }
 
 PYBIND11_MODULE(buglib,m){
+
+    m.attr("redirect_output") = py::capsule(new py::scoped_ostream_redirect(
+        std::cout,                               // std::ostream&
+        py::module_::import("sys").attr("stdout") // Python output
+    ),
+    [](void *sor) { delete static_cast<py::scoped_ostream_redirect *>(sor); });
 
     m.def("test_bug",&test_bug);
 
